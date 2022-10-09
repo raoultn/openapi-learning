@@ -1,0 +1,391 @@
+openapi: 3.0.3
+info:
+  title: EazyShop Products APIs Definition
+  description: |
+    # About us
+      Using this `OpenAPI specification`, any consumer can understand the _APIs_ that are exposed by ***EazyShop***
+    # Catégories de produits
+      - ### Ordinateur
+        - Dell
+        - HP
+        - Lonovo
+      - ### Téléphone 
+        - Samsung
+        - Apple
+        - Note Plus
+      - ### Téléviseurs
+        - LG
+        - Samsung
+    ```
+    A Votre service
+    ```
+    
+  termsOfService: https://eazyshop.com/terms/
+  contact:
+    name: API Support
+    url: https://www.eazyshop.com/support
+    email: support@eazyshop.com
+  license:
+    name: EazyShop License
+    url: https://www.eazyshop.com/licenses/LICENSE-2.0.html
+  version: 0.0.1
+servers:
+  - url: https://development.eazyshop-server.com/v1
+    description: Development server
+  - url: https://staging.eazyshop-server.com/v1
+    description: Staging server
+  - url: https://api.eazyshop-server.com/v1
+    description: Production server
+  - url: https://{username}.server.com:{port}/{version}
+    variables:
+      username:
+        default: demo
+        description: This value is assigned by the service provider.
+      port:
+        enum:
+          - "8443"
+          - "443"
+        default: "8443"
+      version:
+        default: v1
+tags:
+  - name: Catégories
+    description: API en relation avec les catégories
+  - name: Produits
+    description: API en relation avec les produits
+  - name: Commandes
+    description: API en relation avec les commandes
+security: 
+  - basicAuth: []
+  - bearerAuth:  []
+  - apiKeyAuth: []
+  - oAuth2AuthCode: 
+    - read
+    - write
+    - admin
+paths: 
+  /categories:
+    get:
+      tags:
+        - Catégories
+      summary: liste toutes les catégories
+      description: Retourne toutes les catégories gérées par EasyShop
+      parameters: 
+        - $ref: "#/components/parameters/CategorieIdQueryParam"
+      responses:
+        '200':
+          description: Les informations de la catégorie
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Categorie"
+              examples:
+                Toutes-Les-Catégories:
+                  value:
+                    - categorieId: 101
+                      name: Mobiles
+                    - categorieId: 102
+                      name: Ordinateurs
+                    - categorieId: 103
+                      name: Téléviseurs
+                Catégorie-Unique:
+                  value:
+                    categorieId: 101
+                    name: Mobiles
+        '500':
+          $ref: "#/components/responses/InternalError"
+  /categorie/{categoryId}:
+    get:
+      tags:
+        - Catégories
+      summary: recupère les informations de la catégorie
+      description: Retourne les informations de la catégorie dont l'identifiant est passé en paramètre
+      operationId: getCategories
+      deprecated: true
+      parameters: 
+        - name: categoryId
+          in: path
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 1000
+          example: 101
+          required: true
+      responses:
+        '200':
+          description: Les informations de la catégorie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Categorie"
+        '500':
+          $ref: "#/components/responses/InternalError"
+  /products:
+    get:
+      tags:
+        - Produits
+      summary: liste tous les products
+      description: Retourne tous les produits
+      security: []
+      parameters: 
+        - name: productId
+          in: query
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 1000
+          example: 101
+      responses:
+        '200':
+          description: Liste des produitd
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product" 
+        '500':
+          $ref: "#/components/responses/InternalError"
+  /product/{productId}:
+    get:
+      tags:
+        - Produits
+      summary: recupère les informations d'un produit
+      description: Retourne les informations du produit dont l'identifiant est passé en paramètre
+      parameters: 
+        - name: productId
+          in: path
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 1000
+          example: 101
+          required: true
+      responses:
+        '200':
+          description: Les informations de la catégorie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        '500':
+          $ref: "#/components/responses/InternalError"
+  /order:
+    post:
+      tags:
+        - Commandes
+      summary: Enregistrement de la commande
+      description: |
+        Enregistre la commande et retourne l'identifiant de la commande
+      requestBody:
+        content:
+          application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  adresse:
+                    $ref: "#/components/schemas/Adresse"
+      responses:
+        '201':
+          description: Commande enregistrée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  commandeId:
+                    type: integer
+        '500':
+          $ref: "#/components/responses/InternalError"
+    put:
+      tags:
+        - Commandes
+      summary: Mise à jour d'une commande
+      description: |
+        Met à jour de la commande
+      requestBody:
+        content:
+          application/json:
+              schema:
+                type: object
+                properties:
+                  commandeId:
+                    type: integer
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  adresse:
+                    $ref: "#/components/schemas/Adresse"
+      responses:
+        '201':
+          description: Commande mise à jour avec succès
+        '500':
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags:
+        - Commandes
+      summary: annulation d'une commande
+      description: |
+        annuler une commande de EasyShop
+      parameters: 
+        - name: commandeId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Commande annulée avec succès
+        '500':
+          $ref: "#/components/responses/InternalError"
+    get:
+      tags:
+        - Commandes
+      summary: recupère les informations d'une commande
+      description: recupère les informations détaillées d'une commande
+      parameters: 
+        - name: commandeId
+          in: query
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Recupération des informations de la commande effectuée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  commandeId:
+                    type: integer
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  adresse:
+                    $ref: "#/components/schemas/Adresse"
+        '500':
+          $ref: "#/components/responses/InternalError"
+
+components:
+  parameters:
+    CategorieIdQueryParam:
+      name: categoryId
+      in: query
+      schema:
+        type: integer
+        minimum: 100
+        maximum: 1000
+      examples:
+        Mobiles:
+          value: 101
+        Ordinateurs:
+          value: 102
+        Téléviseurs:
+          value: 103
+  schemas:
+    Product:
+      type: object
+      properties:
+        productId:
+          type: integer
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+        releaseDate:
+          type: string
+          format: date
+          readOnly: true
+        categoryName:
+          type: string
+        quantity:
+          type: integer
+          description: |
+                _Quantity_ represents `stock` value when this field is being sent by EazyShop. Where as un the scenarios of consumer sending this feild, it represents `number of product items` inside the order.
+                Consumers are expected to handle the scenario of stopping te end user <u>*when the stock value is 0*</u>
+    Adresse:
+      type: object
+      properties:
+        adresseline:
+          type: string
+        ville:
+          type: string
+        etat:
+          type: string
+          enum:
+            - Québec
+            - Ottawa
+            - Alberta
+            - New Brunswich
+        zipcode:
+          type: string
+        isOfficeAdress:
+          type: boolean
+      required: [adresseline, ville, etat, zipcode]
+    Categorie:
+      type: object
+      properties:
+        categorieId:
+          type: integer
+        name:
+          type: string
+    Mobile:
+      allOf:
+        - $ref: "#/components/schemas/Product"
+        - type: object
+          properties:
+            typeReseau:
+              type: string
+              enum:
+                - 4G
+                - 5G
+          required: [typeReseau]
+    Laptop:
+      allOf:
+        - $ref: "#/components/schemas/Product"
+        - type: object
+          properties:
+            ram:
+              type: string
+              enum:
+                - 4 GB
+                - 8 GB
+                - 16 GB
+                - 32 GB
+          required: [ram]
+  responses:
+    InternalError:
+      description: Erreur serveur. Veuillez contacter le support technique
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+    oAuth2AuthCode:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/api/oauth.acces
+          scopes:
+            read: Read only access
+            write: Read Write acces
+            admin: Admin access
+    
